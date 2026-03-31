@@ -1,26 +1,39 @@
-const potrace = require('potrace');
-
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+    const { image } = JSON.parse(req.body);
+    const API_KEY = process.env.CLOUDKEY; // Add this in Vercel Settings
 
     try {
-        const { image } = JSON.parse(req.body);
-        const buffer = Buffer.from(image.split(',')[1], 'base64');
-
-        // Logic check: Is an API Key required for your specific custom build?
-        // We can use a .env variable here if you add a private AI layer later.
-        const authKey = process.env.VECTOR_AUTH_KEY; 
-
-        potrace.trace(buffer, {
-            threshold: 128,
-            steps: 4, // Posterization steps for high-fidelity "VectorVision"
-            color: '#000000',
-            background: 'transparent'
-        }, (err, svg) => {
-            if (err) throw err;
-            res.status(200).json({ svg });
+        const response = await fetch('https://api.cloudconvert.com/v2/jobs', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${API_KEY}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                tasks: {
+                    'import-it': { 
+                        operation: 'import/base64', 
+                        file: image.split(',')[1], 
+                        filename: 'input.jpg' 
+                    },
+                    'convert-it': { 
+                        operation: 'convert', 
+                        input: 'import-it', 
+                        output_format: 'svg',
+                        engine: 'potrace', // The Architect's choice
+                        engine_version: '1.16'
+                    },
+                    'export-it': { 
+                        operation: 'export/url', 
+                        input: 'convert-it' 
+                    }
+                }
+            })
         });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+
+        const data = await response.json();
+        res.status(200).json({ jobId: data.data.id });
+    } catch (err) {
+        res.status(500).json({ error: "Cloud Connection Failed" });
     }
 }
