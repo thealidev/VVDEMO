@@ -3,114 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VectorVision Hub v2.1 | Architect Ali</title>
+    <title>VectorVision v2.2 | Architect Ali</title>
     <style>
-        :root { --blue: #00f2ff; --bg: #050505; --card: #111; }
-        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--blue); width: 100%; max-width: 500px; padding-bottom: 10px; }
-        h1 { font-size: 1.2rem; letter-spacing: 3px; color: var(--blue); margin: 0; }
-        .terminal { background: #000; border: 1px solid #333; height: 160px; width: 100%; max-width: 460px; overflow-y: auto; padding: 10px; font-size: 0.7rem; color: #0f0; margin: 15px 0; }
-        .upload-zone { border: 1px dashed #444; padding: 40px; text-align: center; cursor: pointer; width: 100%; max-width: 440px; background: rgba(255,255,255,0.01); }
-        #fileInput { display: none; }
-        #progress-container { width: 100%; max-width: 460px; height: 4px; background: #222; margin: 10px 0; display: none; }
-        #progress-bar { height: 100%; width: 0%; background: var(--blue); box-shadow: 0 0 10px var(--blue); transition: width 0.3s; }
-        #result { display: none; margin-top: 20px; width: 100%; max-width: 460px; }
-        .svg-box { background: #fff; padding: 10px; border-radius: 4px; min-height: 250px; overflow: auto; display: flex; align-items: center; justify-content: center; }
-        svg { max-width: 100%; height: auto; }
-        .btn { background: transparent; border: 1px solid var(--blue); color: var(--blue); padding: 12px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        :root { --blue: #00f2ff; --bg: #020202; }
+        body { background: var(--bg); color: #fff; font-family: monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .terminal { background: #000; border: 1px solid #333; height: 180px; width: 100%; max-width: 460px; overflow-y: auto; padding: 10px; font-size: 0.7rem; color: #0f0; margin: 15px 0; }
+        .upload-zone { border: 1px dashed #444; padding: 40px; text-align: center; cursor: pointer; width: 100%; max-width: 440px; }
+        #progress-bar { height: 4px; width: 0%; background: var(--blue); transition: 0.3s; margin: 10px 0; display:none; }
+        #svg-out { background: #fff; margin-top: 20px; display: none; padding: 10px; width: 100%; max-width: 440px; }
+        .btn { background: none; border: 1px solid var(--blue); color: var(--blue); padding: 12px; width: 100%; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h1>VECTORVISION HUB v2.1</h1>
-        <p style="font-size: 0.6rem; opacity: 0.6;">HYBRID ARCHITECTURE // NO-TIMEOUT MODE</p>
-    </div>
-
-    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        LOAD IMAGE DATA<br><small>[ STABILITY OPTIMIZED ]</small>
-    </div>
-    <input type="file" id="fileInput" accept="image/*">
-
-    <div id="progress-container"><div id="progress-bar"></div></div>
+    <h2 style="color:var(--blue)">VECTORVISION v2.2 [HEAVY ENGINE]</h2>
+    <div class="upload-zone" onclick="document.getElementById('in').click()">INGEST DATA<br><small>[ STABILITY ASSURED ]</small></div>
+    <input type="file" id="in" style="display:none" accept="image/*">
+    <div id="progress-bar"></div>
     <div class="terminal" id="logs">> STANDBY...</div>
-
-    <div id="result">
-        <div class="svg-box" id="svg-out"></div>
-        <button class="btn" onclick="downloadSVG()">EXPORT VECTOR LOGIC (.SVG)</button>
+    <div id="svg-out">
+        <div id="preview"></div>
+        <button class="btn" onclick="dl()">EXPORT LOGIC</button>
     </div>
 
     <script>
-        const log = (m) => { 
-            const e = document.createElement('div'); 
-            e.innerText = `> ${new Date().toLocaleTimeString()}: ${m}`; 
-            logs.appendChild(e); logs.scrollTop = logs.scrollHeight; 
-        };
-
-        document.getElementById('fileInput').onchange = async function(e) {
+        const log = (m) => { logs.innerHTML += `<div>> ${m}</div>`; logs.scrollTop = logs.scrollHeight; };
+        
+        document.getElementById('in').onchange = async function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            document.getElementById('progress-container').style.display = 'block';
-            document.getElementById('progress-bar').style.width = '10%';
-            document.getElementById('result').style.display = 'none';
-            log(`Processing: ${file.name}`);
-
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const img = new Image();
-                img.onload = async () => {
-                    log("Scaling for Cloud Stability...");
-                    
-                    // THE FIX: Resize to 800px before sending to Vercel
-                    // This ensures the server finishes in < 2 seconds.
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; 
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    const optimizedData = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    log("Pushing to Serverless Brain...");
-                    document.getElementById('progress-bar').style.width = '50%';
-
-                    try {
-                        const response = await fetch('/api/vectorize', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: optimizedData })
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            log("SUCCESS: Cloud node response received.");
-                            document.getElementById('progress-bar').style.width = '100%';
-                            document.getElementById('svg-out').innerHTML = data.svg;
-                            document.getElementById('result').style.display = 'block';
-                        } else {
-                            log("CRITICAL ERROR: Cloud Node Rejected Data.");
-                        }
-                    } catch (err) {
-                        log("TIMEOUT: Server disconnected. Reduce complexity.");
+            log(`File: ${file.name}`);
+            document.getElementById('progress-bar').style.display = 'block';
+            
+            const r = new FileReader();
+            r.onload = async (ev) => {
+                log("Executing Cloud Job...");
+                const res = await fetch('/api/vectorize', {
+                    method: 'POST',
+                    body: JSON.stringify({ image: ev.target.result })
+                });
+                const { jobId } = await res.json();
+                
+                // Keep checking the Cloud until it's finished
+                const check = setInterval(async () => {
+                    log("Cloud Node Calculating...");
+                    const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
+                        headers: { 'Authorization': `Bearer YOUR_PUBLIC_KEY_HERE` }
+                    });
+                    const status = await statusRes.json();
+                    if (status.data.status === 'finished') {
+                        clearInterval(check);
+                        log("SUCCESS: Vector Logic Captured.");
+                        const svgUrl = status.data.tasks.find(t => t.name === 'export-1').result.files[0].url;
+                        const svgText = await fetch(svgUrl).then(r => r.text());
+                        document.getElementById('preview').innerHTML = svgText;
+                        document.getElementById('svg-out').style.display = 'block';
                     }
-                };
-                img.src = event.target.result;
+                }, 3000);
             };
-            reader.readAsDataURL(file);
+            r.readAsDataURL(file);
         };
-
-        function downloadSVG() {
-            const svgData = document.querySelector('svg').outerHTML;
-            const blob = new Blob([svgData], {type: 'image/svg+xml'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'VectorVision_Logic.svg';
-            a.click();
-        }
     </script>
 </body>
 </html>
